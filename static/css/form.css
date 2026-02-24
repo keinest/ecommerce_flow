@@ -1,0 +1,56 @@
+.form-page { max-width: 680px; margin: 3rem auto; padding: 0 1.5rem; }
+.form-back { display: inline-flex; align-items: center; gap: .375rem; font-size: .825rem; color: var(--gray); margin-bottom: 1rem; transition: var(--transition); }
+.form-back:hover { color: var(--primary); }
+.form-title h1 { font-size: 1.875rem; color: var(--dark); margin-bottom: .25rem; }
+.form-title p  { color: var(--gray); font-size: .875rem; margin-bottom: 2rem; }
+
+.form-card { background: white; border: 1px solid var(--border); border-radius: var(--border-radius); padding: 2rem; }
+
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; font-size: .875rem; font-weight: 600; color: var(--dark); margin-bottom: .5rem; }
+.form-group .req { color: var(--danger); }
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: .6875rem .875rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--border-radius-xs);
+    font-family: var(--font-body);
+    font-size: .9375rem;
+    color: var(--dark);
+    background: white;
+    transition: var(--transition);
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+
+.form-group textarea { resize: vertical; min-height: 110px; }
+.form-group small { display: block; margin-top: .375rem; font-size: .775rem; color: var(--gray); }
+
+.form-group .errorlist { list-style: none; margin-top: .375rem; }
+.form-group .errorlist li { font-size: .8rem; color: var(--danger); }
+
+.form-group input[type="file"] { padding: .5rem; background: var(--light-gray); cursor: pointer; }
+
+.form-actions { display: flex; gap: 1rem; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: .5rem; }
+.form-actions .btn { padding: .75rem 1.75rem; font-size: 1rem; }
+
+/* Shop creation extras */
+.form-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--gray);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+}

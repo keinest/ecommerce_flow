@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Commerce Flow{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block extra_css %}{% endblock %}
+    <style>
+        .notif-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--surface, #f8fafc);
+            border: 1.5px solid var(--border, #e2e8f0);
+            color: var(--text, #0f172a);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background .2s;
+        }
+        .notif-btn:hover { background: var(--primary-light, #dbeafe); color: var(--primary, #2563eb); }
+        .notif-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            min-width: 18px; height: 18px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: .65rem;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            border: 2px solid #fff;
+            padding: 0 3px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">
+        <div class="brand-icon"><i class="fas fa-bolt"></i></div>
+        E-Commerce Flow
+    </a>
+    <ul class="navbar-nav">
+        <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Accueil</a></li>
+        <li><a href="{% url 'shop_list' %}"><i class="fas fa-store"></i> Boutiques</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'dashboard' %}"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="{% url 'my_orders' %}"><i class="fas fa-box-open"></i> Mes commandes</a></li>
+        {% endif %}
+    </ul>
+    <div class="navbar-actions">
+        {% if user.is_authenticated %}
+            <a href="{% url 'notifications' %}" class="notif-btn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                {% if unread_notifs > 0 %}
+                <span class="notif-badge">{{ unread_notifs }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'cart_detail' %}" class="cart-btn">
+                <i class="fas fa-shopping-cart"></i> Panier
+                {% with cart=request.session.cart %}
+                {% if cart %}<span class="cart-badge">{{ cart|length }}</span>{% endif %}
+                {% endwith %}
+            </a>
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Connexion</a>
+            <a href="{% url 'register' %}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> S'inscrire</a>
+        {% endif %}
+    </div>
+</nav>
+
+{% if messages %}
+<div class="messages-container" id="messagesContainer">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" role="alert">
+        <span class="alert-icon">
+            {% if message.tags == 'error' %}<i class="fas fa-circle-exclamation"></i>
+            {% elif message.tags == 'success' %}<i class="fas fa-circle-check"></i>
+            {% elif message.tags == 'warning' %}<i class="fas fa-triangle-exclamation"></i>
+            {% else %}<i class="fas fa-circle-info"></i>{% endif %}
+        </span>
+        <span class="alert-text">{{ message }}</span>
+        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Fermer">&times;</button>
+    </div>
+    {% endfor %}
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(el => {
+            el.style.transition = 'opacity .4s ease, transform .4s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(20px)';
+            setTimeout(() => el.remove(), 400);
+        });
+    }, 5000);
+</script>
+{% endif %}
+
+<div class="page-content">{% block content %}{% endblock %}</div>
+
+<footer class="site-footer">
+    <div class="footer-grid">
+        <div>
+            <div class="footer-brand"><div class="brand-icon"><i class="fas fa-bolt"></i></div>E-Commerce Flow</div>
+            <p>Une plateforme complète pour gérer votre boutique en ligne, vos stocks et vos commandes.</p>
+        </div>
+        <div>
+            <h4>Navigation</h4>
+            <ul>
+                <li><a href="{% url 'home' %}">Accueil</a></li>
+                <li><a href="{% url 'shop_list' %}">Boutiques</a></li>
+                {% if user.is_authenticated %}<li><a href="{% url 'dashboard' %}">Dashboard</a></li>{% endif %}
+            </ul>
+        </div>
+        <div>
+            <h4>Compte</h4>
+            <ul>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'cart_detail' %}">Mon panier</a></li>
+                <li><a href="{% url 'my_orders' %}">Mes commandes</a></li>
+                <li><a href="{% url 'create_shop' %}">Créer une boutique</a></li>
+                {% else %}
+                <li><a href="{% url 'login' %}">Connexion</a></li>
+                <li><a href="{% url 'register' %}">Inscription</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>&copy; 2026 E-Commerce Flow. Tous droits réservés.</span>
+        <span>Propulsé par <strong>Django 5</strong> &amp; ❤️</span>
+    </div>
+</footer>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

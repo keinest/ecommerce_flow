@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}E-Commerce Flow — Gérez votre boutique{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <div class="hero-badge">
+                <div class="live-dot"></div>
+                Plateforme e-commerce tout-en-un
+            </div>
+
+            <h1>
+                Gérez votre boutique<br>avec <span class="gradient-text">efficacité</span>
+            </h1>
+
+            <p class="hero-desc">
+                Une solution complète pour gérer votre catalogue, suivre vos commandes et analyser vos ventes en temps réel.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> Commencer gratuitement
+                </a>
+                <a href="{% url 'shop_list' %}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-store"></i> Voir les boutiques
+                </a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <h3>{{ total_products }}+</h3>
+                    <p>Produits en ligne</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>{{ total_sales }}+</h3>
+                    <p>Ventes réalisées</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>100%</h3>
+                    <p>Gratuit</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-card">
+            <div class="preview-header">
+                <div class="win-dot" style="background:#ef4444;"></div>
+                <div class="win-dot" style="background:#f59e0b;"></div>
+                <div class="win-dot" style="background:#10b981;"></div>
+                <span class="preview-title">Dashboard — E-Commerce Flow</span>
+            </div>
+            <div class="preview-body">
+                <div class="preview-stats">
+                    <div class="ps-item">
+                        <div class="ps-label">Produits</div>
+                        <div class="ps-value">{{ total_products }}</div>
+                    </div>
+                    <div class="ps-item">
+                        <div class="ps-label">Ventes</div>
+                        <div class="ps-value">{{ total_sales }}</div>
+                    </div>
+                    <div class="ps-item">
+                        <div class="ps-label">CA</div>
+                        <div class="ps-value">—</div>
+                    </div>
+                </div>
+                <div class="preview-rows">
+                    {% for product in products|slice:":4" %}
+                    <div class="preview-row">
+                        <div class="pr-icon" style="background:{% cycle '#2563eb' '#7c3aed' '#10b981' '#f59e0b' %};">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <span class="pr-name">{{ product.name|truncatechars:22 }}</span>
+                        <span class="pr-price">{{ product.price }} €</span>
+                    </div>
+                    {% empty %}
+                    <div class="preview-row">
+                        <div class="pr-icon" style="background:#2563eb;"><i class="fas fa-mobile-alt"></i></div>
+                        <span class="pr-name">iPhone 15 Pro</span>
+                        <span class="pr-price">1 199 €</span>
+                    </div>
+                    <div class="preview-row">
+                        <div class="pr-icon" style="background:#7c3aed;"><i class="fas fa-laptop"></i></div>
+                        <span class="pr-name">MacBook Air M3</span>
+                        <span class="pr-price">1 299 €</span>
+                    </div>
+                    <div class="preview-row">
+                        <div class="pr-icon" style="background:#10b981;"><i class="fas fa-headphones"></i></div>
+                        <span class="pr-name">AirPods Pro 2</span>
+                        <span class="pr-price">279 €</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section" id="features">
+    <div class="section-intro">
+        <span class="eyebrow">Fonctionnalités</span>
+        <h2>Tout ce dont vous avez besoin</h2>
+        <p>Des outils puissants pensés pour les vendeurs qui veulent gérer leur activité sans friction.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#dbeafe;color:#2563eb;">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <h3>Gestion de produits</h3>
+            <p>Ajoutez, modifiez et organisez votre catalogue. Gérez les stocks, les prix et les catégories en toute simplicité.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#ede9fe;color:#7c3aed;">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <h3>Suivi des commandes</h3>
+            <p>Suivez chaque commande en temps réel, de la validation à la livraison, avec un tableau de bord clair.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#d1fae5;color:#059669;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Analyses & rapports</h3>
+            <p>Visualisez vos ventes, identifiez vos produits populaires et prenez les bonnes décisions avec des graphiques en temps réel.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── PRODUCTS SHOWCASE ── -->
+{% if products %}
+<section class="products-section">
+    <div class="inner">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div>
+                <span class="eyebrow">Catalogue</span>
+                <h2 style="font-size:1.875rem;color:var(--dark);margin-top:.5rem;">Produits disponibles</h2>
+            </div>
+            <a href="{% url 'shop_list' %}" class="btn btn-secondary">
+                Voir toutes les boutiques <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="products-grid">
+            {% for product in products %}
+            <a href="{% url 'product_detail' product.pk %}" class="product-card" style="color:inherit;">
+                <div class="pc-img">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    <i class="fas fa-box"></i>
+                    {% endif %}
+                </div>
+                <div class="pc-body">
+                    <h3>{{ product.name }}</h3>
+                    <div class="pc-cat">{{ product.category.name|default:"Non catégorisé" }} · {{ product.shop.name }}</div>
+                    <div class="pc-footer">
+                        <span class="pc-price">{{ product.price }} €</span>
+                        <span class="btn btn-primary btn-sm">Voir</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+    <h2>Prêt à lancer votre boutique ?</h2>
+    <p>Rejoignez E-Commerce Flow et commencez à vendre dès aujourd'hui, gratuitement.</p>
+    {% if user.is_authenticated %}
+    <a href="{% url 'create_shop' %}" class="btn btn-lg" style="background:white;color:var(--primary);border-color:white;font-size:1.0625rem;">
+        <i class="fas fa-store"></i> Créer ma boutique
+    </a>
+    {% else %}
+    <a href="{% url 'register' %}" class="btn btn-lg" style="background:white;color:var(--primary);border-color:white;font-size:1.0625rem;">
+        <i class="fas fa-rocket"></i> Créer mon compte gratuit
+    </a>
+    {% endif %}
+</section>
+
+{% endblock %}

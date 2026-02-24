@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ajouter un produit — {{ shop.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <a href="{% url 'shop_detail' shop.pk %}" class="form-back"><i class="fas fa-arrow-left"></i> Retour à {{ shop.name }}</a>
+    <div class="form-title">
+        <h1>Ajouter un produit</h1>
+        <p>Boutique : <strong>{{ shop.name }}</strong></p>
+    </div>
+
+    <div class="form-card">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %} <span class="req">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                {% if field.errors %}{{ field.errors }}{% endif %}
+            </div>
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Ajouter le produit</button>
+                <a href="{% url 'shop_detail' shop.pk %}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

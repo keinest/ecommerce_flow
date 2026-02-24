@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panier — E-commerce Flow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <div>
+        <h1><i class="fas fa-shopping-cart" style="color:var(--primary);"></i> Votre panier</h1>
+        {% if items %}
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Prix unit.</th>
+                    <th>Qté</th>
+                    <th>Sous-total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div class="cart-product">
+                            <div class="cp-img">
+                                {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<i class="fas fa-box"></i>{% endif %}
+                            </div>
+                            <div class="cp-info">
+                                <h4>{{ item.product.name }}</h4>
+                                <span>{{ item.product.shop.name }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="price-col">{{ item.product.price }} €</td>
+                    <td><span class="qty-badge">{{ item.quantity }}</span></td>
+                    <td class="subtotal-col">{{ item.subtotal }} €</td>
+                    <td><a href="{% url 'remove_from_cart' item.product.pk %}" class="remove-btn"><i class="fas fa-trash-alt"></i> Retirer</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top:1.25rem;">
+            <a href="{% url 'shop_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Continuer mes achats</a>
+        </div>
+        {% else %}
+        <div class="empty-cart-box empty-state">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Votre panier est vide</h3>
+            <p>Parcourez nos boutiques pour trouver des produits.</p>
+            <a href="{% url 'shop_list' %}" class="btn btn-primary"><i class="fas fa-store"></i> Voir les boutiques</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if items %}
+    <div class="cart-summary">
+        <h2>Récapitulatif</h2>
+        {% for item in items %}
+        <div class="sum-row">
+            <span class="slabel">{{ item.product.name|truncatechars:22 }} ×{{ item.quantity }}</span>
+            <span class="sval">{{ item.subtotal }} €</span>
+        </div>
+        {% endfor %}
+        <div class="sum-row">
+            <span class="slabel">Livraison</span>
+            <span class="sval sval-free">Gratuite</span>
+        </div>
+        <div class="sum-total">
+            <span>Total</span>
+            <span class="tv">{{ total }} €</span>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'checkout' %}" class="btn btn-primary btn-checkout"><i class="fas fa-lock"></i> Passer la commande</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary btn-checkout"><i class="fas fa-sign-in-alt"></i> Connexion pour commander</a>
+        {% endif %}
+        <p class="secure-note"><i class="fas fa-shield-alt"></i> Paiement 100% sécurisé</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

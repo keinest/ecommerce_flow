@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ shop.name }} — E-commerce Flow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shop_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="shop-hero">
+    <div class="shop-hero-inner">
+        <div class="shop-logo-wrap">
+            {% if shop.logo %}<img src="{{ shop.logo.url }}" alt="{{ shop.name }}">{% else %}<i class="fas fa-store"></i>{% endif %}
+        </div>
+        <div class="shop-hero-info">
+            <h1>{{ shop.name }}</h1>
+            <p>{{ shop.description|default:"Aucune description disponible." }}</p>
+            <div class="owner"><i class="fas fa-user-circle"></i> {{ shop.owner.first_name }} {{ shop.owner.last_name }}</div>
+        </div>
+        {% if is_owner %}
+        <a href="{% url 'add_product' shop.pk %}" class="btn btn-primary"><i class="fas fa-plus"></i> Ajouter un produit</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_owner %}
+<div style="max-width:1100px;margin:0 auto 1rem;padding:0 1.5rem;">
+    <div style="background:#dbeafe;border:1.5px solid #93c5fd;border-radius:10px;padding:.75rem 1.1rem;color:#1e40af;font-size:.9rem;">
+        <i class="fas fa-info-circle"></i> Vous êtes le propriétaire de cette boutique. Vous ne pouvez pas commander vos propres produits.
+    </div>
+</div>
+{% endif %}
+
+<div class="shop-content">
+    <h2><i class="fas fa-box" style="color:var(--primary);"></i> Produits disponibles</h2>
+    {% if products %}
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <div class="pc-img">
+                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<i class="fas fa-box"></i>{% endif %}
+            </div>
+            <div class="pc-body">
+                <h3>{{ product.name }}</h3>
+                <div class="cat">{{ product.category.name|default:"Non catégorisé" }}</div>
+                <p class="desc">{{ product.description }}</p>
+                <div class="pc-footer">
+                    <span class="pc-price">{{ product.price }} €</span>
+                    <div class="pc-actions">
+                        <span class="pc-stock">{{ product.stock }} en stock</span>
+                        <a href="{% url 'product_detail' product.pk %}" class="btn btn-secondary btn-sm">Voir</a>
+                        {% if not is_owner %}
+                        <a href="{% url 'add_to_cart' product.pk %}" class="btn btn-primary btn-sm"><i class="fas fa-cart-plus"></i> Ajouter</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>Aucun produit disponible</h3>
+        <p>Cette boutique n'a pas encore de produits en stock.</p>
+        {% if is_owner %}
+        <a href="{% url 'add_product' shop.pk %}" class="btn btn-primary"><i class="fas fa-plus"></i> Ajouter un produit</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

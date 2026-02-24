@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Tableau de bord — E-commerce Flow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+/* ── Commandes reçues ── */
+.orders-table-wrap { overflow-x: auto; }
+.orders-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.orders-table th { background: #f8fafc; color: #64748b; font-weight: 600; padding: .65rem .9rem; text-align: left; white-space: nowrap; }
+.orders-table td { padding: .65rem .9rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.orders-table tr:last-child td { border-bottom: none; }
+.orders-table tr:hover td { background: #f8fafc; }
+.status-form { display: flex; gap: .4rem; align-items: center; }
+.status-form select {
+    border: 1.5px solid #e2e8f0; border-radius: 8px; padding: .3rem .55rem;
+    font-size: .82rem; background: #fff; color: #1e293b; cursor: pointer;
+}
+.status-form button {
+    background: var(--primary, #2563eb); color: #fff; border: none;
+    border-radius: 8px; padding: .3rem .7rem; font-size: .82rem; cursor: pointer;
+    transition: background .2s;
+}
+.status-form button:hover { background: #1d4ed8; }
+.badge { display: inline-flex; align-items: center; gap: .2rem; padding: .2rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.badge-warning { background: #fef9c3; color: #a16207; }
+.badge-info    { background: #dbeafe; color: #1d4ed8; }
+.badge-primary { background: #e0e7ff; color: #4338ca; }
+.badge-success { background: #dcfce7; color: #166534; }
+.badge-danger  { background: #fee2e2; color: #991b1b; }
+.badge-gray    { background: #f1f5f9; color: #475569; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Menu</div>
+            <a class="sidebar-link active" href="{% url 'dashboard' %}">
+                <span class="s-icon"><i class="fas fa-chart-pie"></i></span> Tableau de bord
+            </a>
+            <a class="sidebar-link" href="{% url 'my_orders' %}">
+                <span class="s-icon"><i class="fas fa-box-open"></i></span> Mes commandes
+            </a>
+            <a class="sidebar-link" href="{% url 'notifications' %}">
+                <span class="s-icon"><i class="fas fa-bell"></i></span> Notifications
+                {% if unread_notifs > 0 %}
+                <span class="badge badge-danger" style="margin-left:auto;">{{ unread_notifs }}</span>
+                {% endif %}
+            </a>
+            <a class="sidebar-link" href="{% url 'shop_list' %}">
+                <span class="s-icon"><i class="fas fa-store"></i></span> Boutiques
+            </a>
+            <a class="sidebar-link" href="{% url 'cart_detail' %}">
+                <span class="s-icon"><i class="fas fa-shopping-cart"></i></span> Panier
+            </a>
+        </div>
+
+        {% if shops %}
+        <div class="sidebar-section">
+            <div class="sidebar-label">Mes boutiques</div>
+            {% for shop in shops %}
+            <a class="sidebar-link" href="{% url 'shop_detail' shop.pk %}">
+                <span class="s-icon"><i class="fas fa-bolt"></i></span>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ shop.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Actions</div>
+            <a class="sidebar-link" href="{% url 'create_shop' %}">
+                <span class="s-icon"><i class="fas fa-plus-circle"></i></span> Créer une boutique
+            </a>
+            <a class="sidebar-link" href="{% url 'home' %}">
+                <span class="s-icon"><i class="fas fa-home"></i></span> Accueil
+            </a>
+            <form method="post" action="{% url 'logout' %}" class="sidebar-logout-form">
+                {% csrf_token %}
+                <button type="submit">
+                    <span class="s-icon"><i class="fas fa-sign-out-alt"></i></span> Déconnexion
+                </button>
+            </form>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="s-user-card">
+                <div class="avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                <div class="s-user-info">
+                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                    <span>{{ user.email }}</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="dash-main">
+
+        <!-- Header -->
+        <div class="dash-header">
+            <div>
+                <h1>Tableau de bord</h1>
+                <p class="subtitle">Bienvenue, <strong>{{ user.first_name }}</strong> — voici un aperçu de votre activité.</p>
+            </div>
+            <div class="dash-header-actions">
+                <a href="{% url 'create_shop' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle boutique
+                </a>
+                {% if shops.first %}
+                <a href="{% url 'add_product' shops.first.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-box"></i> Nouveau produit
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="sc-top">
+                    <div class="sc-icon blue"><i class="fas fa-box"></i></div>
+                    <div class="sc-trend up"><i class="fas fa-arrow-trend-up"></i> Mes produits</div>
+                </div>
+                <h2>{{ total_products }}</h2>
+                <p>Produits en stock</p>
+            </div>
+            <div class="stat-card">
+                <div class="sc-top">
+                    <div class="sc-icon purple"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="sc-trend up"><i class="fas fa-arrow-trend-up"></i> Reçues</div>
+                </div>
+                <h2>{{ total_orders }}</h2>
+                <p>Commandes reçues</p>
+            </div>
+            <div class="stat-card">
+                <div class="sc-top">
+                    <div class="sc-icon green"><i class="fas fa-euro-sign"></i></div>
+                    <div class="sc-trend up"><i class="fas fa-arrow-trend-up"></i> Livrées</div>
+                </div>
+                <h2>{{ total_revenue|floatformat:0 }} €</h2>
+                <p>CA (livraisons)</p>
+            </div>
+            <div class="stat-card">
+                <div class="sc-top">
+                    <div class="sc-icon amber"><i class="fas fa-clock"></i></div>
+                    {% if pending_orders > 0 %}
+                    <div class="sc-trend down"><i class="fas fa-exclamation"></i> À traiter</div>
+                    {% else %}
+                    <div class="sc-trend neutral">—</div>
+                    {% endif %}
+                </div>
+                <h2>{{ pending_orders }}</h2>
+                <p>En attente</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dash-grid">
+
+            <!-- Left -->
+            <div class="left-col">
+
+                <!-- ── Commandes reçues (gestion vendeur) ── -->
+                {% if shops %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-inbox"></i> Commandes reçues</h3>
+                        {% if pending_orders > 0 %}
+                        <span class="badge badge-warning"><i class="fas fa-clock"></i> {{ pending_orders }} en attente</span>
+                        {% else %}
+                        <span class="badge badge-success"><i class="fas fa-check"></i> À jour</span>
+                        {% endif %}
+                    </div>
+                    {% if incoming_orders %}
+                    <div class="orders-table-wrap">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Client</th>
+                                    <th>Boutique</th>
+                                    <th>Produits</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in incoming_orders %}
+                                <tr>
+                                    <td style="font-weight:700;">#{{ order.id }}</td>
+                                    <td>
+                                        <div style="font-weight:500;">{{ order.customer.first_name }} {{ order.customer.last_name }}</div>
+                                        <div style="font-size:.78rem;color:#94a3b8;">{{ order.customer.username }}</div>
+                                    </td>
+                                    <td style="font-size:.85rem;">{{ order.shop.name }}</td>
+                                    <td style="font-size:.82rem;color:#475569;">
+                                        {% for item in order.items.all %}
+                                        {{ item.product.name|truncatechars:18 }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td style="font-weight:600;">{{ order.total }} €</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if order.status == 'pending' %}badge-warning
+                                            {% elif order.status == 'processing' %}badge-info
+                                            {% elif order.status == 'shipped' %}badge-primary
+                                            {% elif order.status == 'delivered' %}badge-success
+                                            {% else %}badge-danger{% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if order.status != 'delivered' and order.status != 'cancelled' %}
+                                        <form method="post" action="{% url 'update_order_status' order.pk %}" class="status-form">
+                                            {% csrf_token %}
+                                            <select name="status">
+                                                <option value="pending"    {% if order.status == 'pending' %}selected{% endif %}>En attente</option>
+                                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>En préparation</option>
+                                                <option value="shipped"    {% if order.status == 'shipped' %}selected{% endif %}>Expédiée</option>
+                                                <option value="delivered"  {% if order.status == 'delivered' %}selected{% endif %}>Livrée ✓</option>
+                                                <option value="cancelled"  {% if order.status == 'cancelled' %}selected{% endif %}>Annulée</option>
+                                            </select>
+                                            <button type="submit"><i class="fas fa-check"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <span style="font-size:.8rem;color:#94a3b8;">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state" style="padding:2rem;">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Aucune commande reçue</h3>
+                        <p>Les commandes de vos boutiques apparaîtront ici.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Produits récents -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-box"></i> Produits récents</h3>
+                        <a href="{% url 'shop_list' %}" class="btn btn-secondary btn-sm">Voir tout</a>
+                    </div>
+                    {% if recent_products %}
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Ventes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in recent_products %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'product_detail' product.pk %}" class="pt-product" style="color:inherit;">
+                                        <div class="pt-thumb">
+                                            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">
+                                            {% else %}<i class="fas fa-box"></i>{% endif %}
+                                        </div>
+                                        <span class="pt-name">{{ product.name }}</span>
+                                    </a>
+                                </td>
+                                <td><span class="badge badge-primary">{{ product.category.name|default:"—" }}</span></td>
+                                <td style="font-weight:600;">{{ product.price }} €</td>
+                                <td>
+                                    <div class="stock-bar">
+                                        <div class="stock-track">
+                                            {% if product.stock >= 50 %}
+                                            <div class="stock-fill fill-high" style="width:{% if product.stock > 100 %}100{% else %}{{ product.stock }}{% endif %}%;"></div>
+                                            {% elif product.stock >= 10 %}
+                                            <div class="stock-fill fill-medium" style="width:{{ product.stock }}%;"></div>
+                                            {% else %}
+                                            <div class="stock-fill fill-low" style="width:{% if product.stock > 0 %}15{% else %}0{% endif %}%;"></div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="stock-qty">{{ product.stock }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-gray">{{ product.sales_count }} vente{{ product.sales_count|pluralize }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state" style="padding:2rem;">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Aucun produit</h3>
+                        <p>Créez d'abord une boutique, puis ajoutez vos produits.</p>
+                        <a href="{% url 'create_shop' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Créer une boutique</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Graphiques -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Ventes mensuelles</h3>
+                        <span class="badge badge-success">12 derniers mois</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Chiffre d'affaires</h3></div>
+                        <div class="card-body">
+                            <div class="chart-wrap" style="height:200px;"><canvas id="revenueChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Statuts commandes</h3></div>
+                        <div class="card-body">
+                            <div class="chart-wrap" style="height:200px;"><canvas id="categoryChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right -->
+            <div class="right-col">
+
+                <div class="revenue-card">
+                    <div class="rc-label"><i class="fas fa-euro-sign"></i> CA total (commandes livrées)</div>
+                    <div class="rc-amount">{{ total_revenue|floatformat:2 }} €</div>
+                    <div class="rc-sub">{{ delivered_orders }} commande{{ delivered_orders|pluralize }} livré{{ delivered_orders|pluralize }}</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-shopping-bag"></i> Statut commandes</h3></div>
+                    <div class="card-body">
+                        <div class="status-grid">
+                            <div class="status-item"><div class="s-dot dot-pending"></div><span class="s-label">En attente</span><span class="s-val">{{ pending_orders }}</span></div>
+                            <div class="status-item"><div class="s-dot dot-delivered"></div><span class="s-label">Livrées</span><span class="s-val">{{ delivered_orders }}</span></div>
+                            <div class="status-item"><div class="s-dot dot-processing"></div><span class="s-label">En prép.</span><span class="s-val">{{ processing_orders }}</span></div>
+                            <div class="status-item"><div class="s-dot dot-cancelled"></div><span class="s-label">Annulées</span><span class="s-val">{{ cancelled_orders }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications récentes -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Notifications récentes</h3>
+                        <a href="{% url 'notifications' %}" class="btn btn-secondary btn-sm">Tout voir</a>
+                    </div>
+                    <div class="card-body" style="padding:.5rem 1.25rem;">
+                        {% with notifs=request.user.notifications.all|slice:":5" %}
+                        {% if notifs %}
+                        <ul style="list-style:none;padding:0;margin:0;">
+                            {% for notif in notifs %}
+                            <li style="display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #f1f5f9;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:{% if not notif.is_read %}#2563eb{% else %}#cbd5e1{% endif %};flex-shrink:0;margin-top:5px;"></span>
+                                <div>
+                                    <div style="font-size:.85rem;color:#1e293b;">{{ notif.message|truncatechars:70 }}</div>
+                                    <div style="font-size:.75rem;color:#94a3b8;">{{ notif.created_at|timesince }} ago</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-state" style="padding:1.5rem;">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>Aucune notification.</p>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <!-- Mes boutiques -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-store"></i> Mes boutiques</h3>
+                        <a href="{% url 'create_shop' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Nouvelle</a>
+                    </div>
+                    <div class="card-body">
+                        {% if shops %}
+                        <div class="shops-mini">
+                            {% for shop in shops %}
+                            <a href="{% url 'shop_detail' shop.pk %}" class="shop-mini-item">
+                                <div class="shop-mini-logo">
+                                    {% if shop.logo %}<img src="{{ shop.logo.url }}" alt="{{ shop.name }}">
+                                    {% else %}<i class="fas fa-store"></i>{% endif %}
+                                </div>
+                                <div class="shop-mini-info">
+                                    <h4>{{ shop.name }}</h4>
+                                    <span>{{ shop.products.count }} produit{{ shop.products.count|pluralize }}</span>
+                                </div>
+                                <i class="fas fa-chevron-right shop-mini-arrow"></i>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state" style="padding:1.5rem;">
+                            <i class="fas fa-store"></i>
+                            <h3>Aucune boutique</h3>
+                            <p>Créez votre première boutique.</p>
+                            <a href="{% url 'create_shop' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Créer maintenant</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const salesLabels = {{ chart_labels|safe }};
+    const salesData   = {{ chart_data|safe }};
+
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels: salesLabels,
+            datasets: [{
+                label: 'Commandes',
+                data: salesData,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,.08)',
+                tension: 0.45, fill: true,
+                pointBackgroundColor: '#2563eb',
+                pointRadius: 4, pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: salesLabels.slice(-6),
+            datasets: [{
+                label: 'CA (€)',
+                data: salesData.slice(-6),
+                backgroundColor: 'rgba(124,58,237,.12)',
+                borderColor: '#7c3aed', borderWidth: 2, borderRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+    });
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['En attente', 'En prép.', 'Expédiées', 'Livrées', 'Annulées'],
+            datasets: [{
+                data: [{{ pending_orders }}, {{ processing_orders }}, 0, {{ delivered_orders }}, {{ cancelled_orders }}],
+                backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#ef4444'],
+                borderWidth: 0, hoverOffset: 5,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } },
+            cutout: '65%',
+        }
+    });
+</script>
+{% endblock %}
