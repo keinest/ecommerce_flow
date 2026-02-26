@@ -39,7 +39,7 @@ ecommerce_flow/
 │   └── asgi.py
 ├── core/                 # Application principale
 │   ├── models.py         # Shop, Product, Order, OrderItem
-│   ├── views.py          # Toutes les vues (corrigées)
+│   ├── views.py          # Toutes les vues
 │   ├── urls.py           # Routes
 │   ├── forms.py          # Formulaires
 │   └── admin.py          # Interface admin
@@ -57,7 +57,7 @@ ecommerce_flow/
 │       ├── login.html
 │       └── register.html
 ├── static/               # Fichiers statiques
-├── media/                # Uploads (générés)
+├── media/                # Uploads
 ├── manage.py
 └── requirements.txt
 ```
