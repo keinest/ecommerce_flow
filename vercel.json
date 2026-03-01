@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "config.settings/wsgi.py"
+      "dest": "config/wsgi.py"
     }
   ]
 }
