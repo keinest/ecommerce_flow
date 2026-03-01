@@ -61,18 +61,6 @@ ecommerce_flow/
 ├── manage.py
 └── requirements.txt
 ```
-
-## Bugs corrigés
-
-- ✅ `product.orders.count` → annotation `Count('orderitem')`
-- ✅ `@login_required` ajouté sur `checkout`
-- ✅ Barre de stock bornée à 100%
-- ✅ `total_revenue` affiché dans le dashboard
-- ✅ `base.html` créé (était manquant → crash)
-- ✅ Checkout multi-boutiques : une commande par shop
-- ✅ Vérification stock max dans `add_to_cart`
-- ✅ Nettoyage auto du panier si produit supprimé
-
 ## Fonctionnalités
 
 - Gestion de boutiques et produits
